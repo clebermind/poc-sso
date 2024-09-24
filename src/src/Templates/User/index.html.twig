@@ -1,0 +1,10 @@
+{% include 'partials/header.html.twig' %}
+<div class="container">
+    <h1>{{ userType }}</h1>
+    {% if isSsoAuthenticated %}
+        <h2>Logged using SSO</h2>
+    {% else %}
+        <h2>Logged using credentials</h2>
+    {% endif %}
+</div>
+{% include 'partials/footer.html.twig' %}
