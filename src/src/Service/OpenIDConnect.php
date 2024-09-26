@@ -4,18 +4,19 @@ namespace App\Service;
 
 use Jumbojett\OpenIDConnectClient;
 use Jumbojett\OpenIDConnectClientException;
+use App\Service\IDP\IdentityProviderInterface;
 
 class OpenIDConnect
 {
-    private OpenIDConnectClient $client;
     private array $scope = ['openid', 'profile', 'offline_access'];
 
-    public function __construct(string $providerUrl, ?string $clientId, ?string $clientSecret, ?string $redirectUri)
-    {
-        $this->client = new OpenIDConnectClient($providerUrl);
-        $this->setClientId($clientId);
-        $this->setClientSecret($clientSecret);
-        $this->setRedirectURL($redirectUri);
+    public function __construct(
+        private readonly OpenIDConnectClient $client,
+        private readonly IdentityProviderInterface $identityProvider,
+    ) {
+        $this->setClientId($this->identityProvider->getClientId());
+        $this->setClientSecret($this->identityProvider->getClientSecret());
+        $this->setRedirectURL($this->identityProvider->getRedirectUri());
     }
 
     public function setClientId(string $clientId): static

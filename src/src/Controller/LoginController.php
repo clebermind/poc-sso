@@ -11,17 +11,36 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Service\Authentication;
 use App\Factory\OpenIDConnectFactory;
 use App\Service\OpenIDConnect;
+use InvalidArgumentException;
+use LogicException;
+use Exception;
 
 class LoginController extends MainController
 {
     private OpenIDConnect $openIDConnect;
+    private bool $isSooEnabled = true;
+    private ?string $disabledSooReason = null;
 
     public function __construct(
         private readonly Authentication $authentication,
         OpenIDConnectFactory $openIDConnectFactory,
         TokenStorageInterface $tokenStorage,
     ) {
-        $this->openIDConnect = $openIDConnectFactory->create();
+        try {
+            $this->openIDConnect = $openIDConnectFactory->create();
+        } catch (InvalidArgumentException $exception) {
+            $this->isSooEnabled = false;
+            $this->disabledSooReason = 'Set up Identity Provider is not available';
+            error_log($exception->getMessage());
+        }catch (LogicException $exception) {
+            $this->isSooEnabled = false;
+            $this->disabledSooReason = 'Identity Provider is not available';
+            error_log($exception->getMessage());
+        } catch (\Exception $exception) {
+            $this->isSooEnabled = false;
+            $this->disabledSooReason = 'Unknown error';
+            error_log($exception->getMessage());
+        }
 
         parent::__construct($tokenStorage);
     }
@@ -29,7 +48,13 @@ class LoginController extends MainController
     #[Route('/login', name: 'login')]
     public function login(): Response
     {
-        return $this->render('Login/index.html.twig');
+        return $this->render(
+            'Login/index.html.twig',
+            [
+                'isSooEnabled' => $this->isSooEnabled,
+                'disabledSooReason' => $this->disabledSooReason,
+            ]
+        );
     }
 
     #[Route('/login/validate', name: 'login_validation')]

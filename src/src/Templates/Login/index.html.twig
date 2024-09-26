@@ -20,11 +20,17 @@
             </div>
         {% endif %}
 
+        {% if isSooEnabled %}
         <hr class="hr mt-5" />
 
         <div class="mt-5 col-md-12 text-center">
             <a class="btn btn-primary btn-lg" href="/login/sso">Sign In with SSO</a>
         </div>
+        {% elseif disabledSooReason %}
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ disabledSooReason  }}
+            </div>
+        {% endif %}
 
     </div>
 
