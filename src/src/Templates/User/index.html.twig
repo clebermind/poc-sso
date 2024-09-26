@@ -6,5 +6,12 @@
     {% else %}
         <h2>Logged using credentials</h2>
     {% endif %}
+
+    <pre>
+    Id: {{ user.id }}
+    Username: {{ user.username }}
+    Password: {{ user.password }}
+    Roles: {{ user.roles | join(', ') }}
+    </pre>
 </div>
 {% include 'partials/footer.html.twig' %}

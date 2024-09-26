@@ -11,18 +11,23 @@ class DashboardController extends MainController
     #[Route('/admin', name: 'admin_only')]
     public function admin(): Response
     {
-        return $this->render('User/index.html.twig', [
-            'userType' => 'Admin',
-            'isSsoAuthenticated' => $this->isSsoAuthenticated(),
-        ]);
+        return $this->renderUserDetails('Admin');
     }
 
     #[Route('/user', name: 'user_access')]
     public function user(Request $request): Response
     {
+        return $this->renderUserDetails('User');
+    }
+
+    private function renderUserDetails(string $userType): Response
+    {
+        $user = $this->getUser();
+
         return $this->render('User/index.html.twig', [
-            'userType' => 'User',
+            'userType' => $userType,
             'isSsoAuthenticated' => $this->isSsoAuthenticated(),
+            'user' => $user,
         ]);
     }
 }

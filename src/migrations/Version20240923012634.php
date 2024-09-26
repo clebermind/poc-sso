@@ -22,11 +22,12 @@ final class Version20240923012634 extends AbstractMigration
         // this method is called during the "up" migration
         $this->addSql("INSERT INTO user (username, password, roles) VALUES ('admin@simpro.com', md5('simpro123'), '[\"ROLE_ADMIN\"]')");
         $this->addSql("INSERT INTO user (username, password, roles) VALUES ('user@simpro.com', md5('simpro123'), '[]')");
+        $this->addSql("INSERT INTO user (username, password, roles) VALUES ('simpro_sso@hotmail.com', md5('simpro123'), '[\"ROLE_ADMIN\"]')");
     }
 
     public function down(Schema $schema): void
     {
         // this method is called during the "down" migration
-        $this->addSql("DELETE FROM user WHERE username IN ('admin@simpro.com', 'user@simpro.com')");
+        $this->addSql("DELETE FROM user WHERE username IN ('admin@simpro.com', 'user@simpro.com', 'simpro_sso@hotmail.com')");
     }
 }
