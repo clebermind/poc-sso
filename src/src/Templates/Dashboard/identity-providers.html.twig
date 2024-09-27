@@ -1,36 +1,55 @@
 {% include 'partials/header.html.twig' %}
-<div class="container">
-    <h1>Identity Providers List</h1>
 
-    <table class="table table-striped">
-        <thead>
+<h1>Identity Providers List</h1>
+
+{% if app.request.query.get('message') %}
+    <div class="alert alert-info mt-3" role="alert">
+        {{ app.request.query.get('message')  }}
+    </div>
+{% endif %}
+
+<table class="table table-striped" style="width: 90%; left: 5%; position: relative">
+    <thead>
+    <tr>
+        <th>&nbsp;</th>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Description</th>
+        <th scope="col">Class Name</th>
+        <th scope="col">Client ID</th>
+        <th scope="col">Client Secret</th>
+        <th scope="col">Scope</th>
+        <th scope="col">Extra Fields</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for identityProvider in identityProviders %}
         <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Name</th>
-            <th scope="col">Description</th>
-            <th scope="col">Class Name</th>
-            <th scope="col">Tenant</th>
-            <th scope="col">Client ID</th>
-            <th scope="col">Client Secret</th>
-            <th scope="col">Scope</th>
-            <th scope="col">Extra Fields</th>
+            <td>
+                {% if identityProvider.className == enableIdp %}
+                    Enabled
+                {% else %}
+                    <form action="/dashboard/identity-providers/enable" method="POST">
+                        <input name="idp_id" type="hidden" value="{{ identityProvider.id }}">
+                        <button class="button">Enable</button>
+                    </form>
+                {% endif %}
+            </td>
+            <td>{{ identityProvider.id }}</td>
+            <td>{{ identityProvider.name }}</td>
+            <td>{{ identityProvider.description }}</td>
+            <td>{{ identityProvider.className }}</td>
+            <td>{{ identityProvider.clientId }}</td>
+            <td>{{ identityProvider.clientSecret }}</td>
+            <td>{{ identityProvider.scope | join(', ') }}</td>
+            <td>
+                {% for key, value in identityProvider.extraFields %}
+                    <strong>{{ key }}</strong>: {{ value }}<br />
+                {% endfor %}
+            </td>
         </tr>
-        </thead>
-        <tbody>
-        {% for identityProvider in identityProviders %}
-            <tr>
-                <td>{{ identityProvider.id }}</td>
-                <td>{{ identityProvider.name }}</td>
-                <td>{{ identityProvider.description }}</td>
-                <td>{{ identityProvider.className }}</td>
-                <td>{{ identityProvider.tenant }}</td>
-                <td>{{ identityProvider.clientId }}</td>
-                <td>{{ identityProvider.clientSecret }}</td>
-                <td>{{ identityProvider.scope | join(', ') }}</td>
-                <td>{{ identityProvider.extraFields | join(', ') }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+    {% endfor %}
+    </tbody>
+</table>
+
 {% include 'partials/footer.html.twig' %}

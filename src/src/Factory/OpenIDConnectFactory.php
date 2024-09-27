@@ -42,8 +42,7 @@ final class OpenIDConnectFactory
 
         $identityProvider = $this->getIdentityProviderObject($ssoSetting->getValue());
 
-        $identityProvider->setTenant($identityProviderSetting->getTenant())
-            ->setClientId($identityProviderSetting->getClientId())
+        $identityProvider->setClientId($identityProviderSetting->getClientId())
             ->setClientSecret($identityProviderSetting->getClientSecret())
             ->addExtraFields($identityProviderSetting->getExtraFields())
             ->addScope($identityProviderSetting->getScope())
@@ -52,7 +51,10 @@ final class OpenIDConnectFactory
         $openIDConnectClient = new OpenIDConnectClient($identityProvider->getProviderUrl());
         $openIDConnectClient->addScope($identityProvider->getScope());
 
-        return new OpenIDConnect($openIDConnectClient, $identityProvider);
+        $openIdConnect = new OpenIDConnect($openIDConnectClient, $identityProvider);
+        $openIdConnect->setIdentityProviderName($identityProviderSetting->getName());
+
+        return $openIdConnect;
     }
 
     /**

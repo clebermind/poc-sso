@@ -30,9 +30,6 @@ class IdentityProvider
     private array $scope = [];
 
     #[ORM\Column(length: 255)]
-    private ?string $tenant = null;
-
-    #[ORM\Column(length: 255)]
     private ?string $client_id = null;
 
     #[ORM\Column(length: 255)]
@@ -102,18 +99,6 @@ class IdentityProvider
     public function setScope(array $scope): static
     {
         $this->scope = $scope;
-
-        return $this;
-    }
-
-    public function getTenant(): ?string
-    {
-        return $this->tenant;
-    }
-
-    public function setTenant(string $tenant): static
-    {
-        $this->tenant = $tenant;
 
         return $this;
     }

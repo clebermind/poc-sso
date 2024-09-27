@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Repository\UserRepository;
+use Jumbojett\OpenIDConnectClientException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
@@ -35,10 +36,13 @@ class Authentication
         }
 
         $this->authorizeByCredentials($user);
+
+        $this->session->set('login_method', 'Credentials');
     }
 
     /**
      * @throws AuthenticationException
+     * @throws OpenIDConnectClientException
      */
     public function authenticateSso(OpenIDConnect $openIDConnect): void
     {
@@ -50,17 +54,31 @@ class Authentication
 
         $refreshToken = $openIDConnect->getRefreshToken();
 
-        $emailAddress =  $this->jwtDecoder->getPayload($accessToken)->email ?? null;
-        if (is_null($emailAddress)) {
-            throw new AuthenticationException('Email address not identified.');
+        $decodedAccessToken =  $this->jwtDecoder->decode($accessToken);
+
+        if ($this->jwtDecoder->isJws()) {
+            if (empty($decodedAccessToken->payload['email'])) {
+                throw new AuthenticationException('Email address not identified.');
+            }
+
+            $userEmail = $decodedAccessToken->payload['email'];
+        } else {
+            $userInfo = $openIDConnect->requestUserInfo();
+            if (empty($userInfo->email)) {
+                throw new AuthenticationException('Email address not identified.');
+            }
+
+            $userEmail = $userInfo->email;
         }
 
-        $user = $this->userRepository->findOneBy(['username' => $emailAddress]);
+        $user = $this->userRepository->findOneBy(['username' => $userEmail]);
         if (!$user) {
             throw new AuthenticationException('User not registered.');
         }
 
         $this->authorizeBySso($user, $accessToken, $idToken, $refreshToken);
+
+        $this->session->set('login_method', $openIDConnect->getIdentityProviderName());
     }
 
     protected function authorizeByCredentials(UserInterface $user): void
@@ -97,5 +115,6 @@ class Authentication
     {
         $this->tokenStorage->setToken(null);
         $this->session->remove('_security_main');
+        $this->session->remove('login_method');
     }
 }

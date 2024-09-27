@@ -6,39 +6,89 @@ use InvalidArgumentException;
 
 class JwtDecoder
 {
+    private bool $isJwe = false;
     /**
      * @throws InvalidArgumentException
      */
-    public function decode(string $jwt): object
+    public function decode(string $token): object
     {
-        $tokenParts = explode(".", $jwt);
+        $tokenParts = explode(".", $token);
 
-        if (count($tokenParts) !== 3) {
-            throw new InvalidArgumentException('Invalid JWT token');
-        }
+        return match (count($tokenParts)) {
+            3 => $this->decodeJws($tokenParts),
+            5 => $this->decodeJwe($tokenParts),
+            default => throw new InvalidArgumentException("Unsupported token format"),
+        };
+    }
 
-        $header = json_decode(base64_decode($tokenParts[0]), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new InvalidArgumentException('Failed to decode JWT payload');
-        }
-
-        $payload = json_decode(base64_decode($tokenParts[1]), true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new InvalidArgumentException('Failed to decode JWT payload');
-        }
-
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function decodeJws(array $tokenParts): object
+    {
         return (object)[
-            'header' => $header,
-            'payload' => $payload,
+            'header' => $this->base64Decode($tokenParts[0]),
+            'payload' => $this->base64Decode($tokenParts[1]),
+            'signature' => $tokenParts[2]
         ];
     }
 
-    public function getPayload(string $jwt): object
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function decodeJwe(array $tokenParts): object
+    {
+        $this->isJwe = true;
+
+        return (object)[
+            'header' => $this->base64Decode($tokenParts[0]),
+            'encryptedKey' => $tokenParts[1],
+            'initializationVector ' => $tokenParts[2],
+            'ciphertext' => $tokenParts[3],
+            'authenticationTag' => $tokenParts[4],
+        ];
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    private function base64Decode(string $part): mixed
+    {
+        $decodedValue = json_decode(base64_decode($part, true), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new InvalidArgumentException("Failed to decode");
+        }
+
+        return $decodedValue;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function getJwsPayload(string $jwt): object
     {
         $decodedJwt = $this->decode($jwt);
 
         return (object)$decodedJwt->payload;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function getJweCiphertext(string $jwt): object
+    {
+        $decodedJwe = $this->decode($jwt);
+
+        return (object)$decodedJwe->ciphertext;
+    }
+
+    public function isJwe(): bool
+    {
+        return $this->isJwe;
+    }
+
+    public function isJws(): bool
+    {
+        return !$this->isJwe;
     }
 }

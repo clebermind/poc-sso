@@ -2,10 +2,11 @@
 
 namespace App\Service\IDP;
 
-use GuzzleHttp\Exception\GuzzleException;
 use LogicException;
 
-final class MicrosoftEntraId extends IdentityProviderAbstract implements IdentityProviderInterface
+final class MicrosoftEntraId
+    extends IdentityProviderAbstract
+    implements IdentityProviderInterface, IdentityProviderAccessTokenInterface
 {
     private string $providerUrl = 'https://login.microsoftonline.com/{tenant}';
     private string $version = 'v2.0';
@@ -18,20 +19,9 @@ final class MicrosoftEntraId extends IdentityProviderAbstract implements Identit
         return  "{$this->getBaseUrl()}/{$this->version}";
     }
 
-    /**
-     * @throws GuzzleException
-     */
-    public function getConfiguration(): array
-    {
-        $url = "{$this->getProviderUrl()}/.well-known/openid-configuration";
-        $response = $this->httpClient->request('GET', $url);
-
-        return json_decode($response->getBody()->getContents(), true);
-    }
-
     public function getAccessTokenIssuer(): string
     {
-        return sprintf('https://sts.windows.net/%s/', $this->tenant);
+        return sprintf('https://sts.windows.net/%s/', $this->getTenant());
     }
 
     public function getAccessTokenAudience(): string
@@ -44,10 +34,16 @@ final class MicrosoftEntraId extends IdentityProviderAbstract implements Identit
      */
     private function getBaseUrl(): string
     {
-        if ($this->tenant) {
-            return str_replace('{tenant}', $this->tenant, $this->providerUrl);
+        return str_replace('{tenant}', $this->getTenant(), $this->providerUrl);
+    }
+
+    private function getTenant(): ?string
+    {
+        $tenant = $this->extraFields['tenant'] ?? null;
+        if (is_null($tenant)) {
+            throw new LogicException('Microsoft Entra ID Provider "tenant" is not configured.');
         }
 
-        throw new LogicException('Microsoft Entra ID Provider "tenant" is not configured.');
+        return $tenant;
     }
 }

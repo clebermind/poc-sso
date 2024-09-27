@@ -4,12 +4,12 @@
 namespace App\Service\IDP;
 
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\GuzzleException;
 
 abstract class IdentityProviderAbstract implements IdentityProviderInterface
 {
     protected string $redirectUrl;
     protected array $scope = ['openid'];
-    protected string $tenant;
     protected string $clientId;
     protected string $clientSecret;
     protected array $extraFields = [];
@@ -38,18 +38,6 @@ abstract class IdentityProviderAbstract implements IdentityProviderInterface
     public function setClientSecret(string $clientSecret): static
     {
         $this->clientSecret = $clientSecret;
-        
-        return $this;
-    }
-
-    public function getTenant(): string
-    {
-        return $this->tenant;
-    }
-
-    public function setTenant(string $tenant): static
-    {
-        $this->tenant = $tenant;
         
         return $this;
     }
@@ -113,5 +101,27 @@ abstract class IdentityProviderAbstract implements IdentityProviderInterface
     public function getExtraFields(): array
     {
         return $this->extraFields;
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function getConfiguration(): array
+    {
+        $url = "{$this->getProviderUrl()}/.well-known/openid-configuration";
+        $response = $this->httpClient->request('GET', $url);
+
+        return json_decode($response->getBody()->getContents(), true);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function getJwks(): array
+    {
+        $url = "{$this->getProviderUrl()}/.well-known/jwks.json";
+        $response = $this->httpClient->request('GET', $url);
+
+        return json_decode($response->getBody()->getContents(), true);
     }
 }

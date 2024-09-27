@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Jumbojett\OpenIDConnectClientException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -54,6 +55,7 @@ class LoginController extends MainController
             [
                 'isSooEnabled' => $this->isSooEnabled,
                 'disabledSooReason' => $this->disabledSooReason,
+                'identityProviderName' => $this->openIDConnect->getIdentityProviderName()
             ]
         );
     }
@@ -71,7 +73,7 @@ class LoginController extends MainController
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
 
-        return $this->redirectToRoute('user_list');
+        return $this->redirectToRoute('user_access');
     }
 
     #[Route('/logout', name: 'logout')]
@@ -108,7 +110,7 @@ class LoginController extends MainController
 
         try {
             $this->authentication->authenticateSso($this->openIDConnect);
-        } catch (AuthenticationException $e) {
+        } catch (AuthenticationException|OpenIDConnectClientException $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
 

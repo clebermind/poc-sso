@@ -15,7 +15,7 @@ final class Version20240926091325 extends AbstractMigration
 
     public function getDescription(): string
     {
-        return '';
+        return 'Insert Microsoft as IDP';
     }
 
     public function up(Schema $schema): void
@@ -25,7 +25,7 @@ final class Version20240926091325 extends AbstractMigration
          $clientSecret = '--client-secret--';
 
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql("INSERT INTO identity_provider (name, class_name, scope, tenant, client_id, client_secret, extra_fields) VALUES ('Microsoft Entra ID (formerly Azure Active Directory)', 'MicrosoftEntraId', '[\"openid\", \"profile\", \"offline_access\"]', '{$tenant}', '{$clientId}', '{$clientSecret}', '{}')");
+        $this->addSql("INSERT INTO identity_provider (name, class_name, scope, client_id, client_secret, extra_fields) VALUES ('Microsoft Entra ID (formerly Azure Active Directory)', 'MicrosoftEntraId', '[\"openid\", \"profile\", \"offline_access\"]', '{$tenant}', '{$clientId}', '{$clientSecret}', '{\"tenant\": \"{$tenant}\"}')");
     }
 
     public function down(Schema $schema): void

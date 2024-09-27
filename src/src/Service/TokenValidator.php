@@ -44,12 +44,14 @@ class TokenValidator
     {
         $this->validate($accessToken);
 
-        if (!$this->isValidIssuer($this->openIDConnect->getAccessTokenIssuer())) {
-            throw new AuthenticationException('Invalid issuer.');
-        }
+        if ($this->jwtDecoder->isJws()) {
+            if (!$this->isValidIssuer($this->openIDConnect->getAccessTokenIssuer())) {
+                throw new AuthenticationException('Invalid issuer.');
+            }
 
-        if (!$this->isValidAudience($this->openIDConnect->getAccessTokenAudience())) {
-            throw new AuthenticationException('Invalid audience.');
+            if (!$this->isValidAudience($this->openIDConnect->getAccessTokenAudience())) {
+                throw new AuthenticationException('Invalid audience.');
+            }
         }
     }
 
@@ -60,15 +62,17 @@ class TokenValidator
     {
         $this->decodedToken = $this->jwtDecoder->decode($token);
 
-        if ($this->isExpired()) {
-            throw new AuthenticationException('Token has expired.');
-        }
+        if ($this->jwtDecoder->isJws()) {
+            if ($this->isExpired()) {
+                throw new AuthenticationException('Token has expired.');
+            }
 
-        try {
-            $this->configuration = $this->openIDConnect->getIdentityProviderConfiguration();
-        } catch (GuzzleException|Exception $exception) {
-            error_log($exception->getMessage());
-            throw new AuthenticationException('Not possible to get the identity provider configuration');
+            try {
+                $this->configuration = $this->openIDConnect->getIdentityProviderConfiguration();
+            } catch (GuzzleException|Exception $exception) {
+                error_log($exception->getMessage());
+                throw new AuthenticationException('Not possible to get the identity provider configuration');
+            }
         }
     }
 

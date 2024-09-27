@@ -9,6 +9,8 @@ use App\Service\IDP\IdentityProviderInterface;
 
 class OpenIDConnect
 {
+    private ?string $identityProviderName = null;
+
     public function __construct(
         private readonly OpenIDConnectClient $client,
         private readonly IdentityProviderInterface $identityProvider,
@@ -16,7 +18,18 @@ class OpenIDConnect
         $this->setClientId($this->identityProvider->getClientId());
         $this->setClientSecret($this->identityProvider->getClientSecret());
         $this->setRedirectURL($this->identityProvider->getRedirectUri());
+    }
 
+    public function setIdentityProviderName(string $identityProviderName): static
+    {
+        $this->identityProviderName = $identityProviderName;
+
+        return $this;
+    }
+
+    public function getIdentityProviderName(): string
+    {
+        return $this->identityProviderName;
     }
 
     /**
@@ -25,6 +38,14 @@ class OpenIDConnect
     public function getIdentityProviderConfiguration(): array
     {
         return $this->identityProvider->getConfiguration();
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function getIdentityProviderJwks(): array
+    {
+        return $this->identityProvider->getJwks();
     }
 
     public function getAccessTokenIssuer(): string
