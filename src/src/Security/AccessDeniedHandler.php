@@ -17,6 +17,6 @@ class AccessDeniedHandler extends AbstractController implements AccessDeniedHand
 
     public function handle(Request $request, AccessDeniedException $accessDeniedException): Response
     {
-        return $this->render('User/access-denied.html.twig');
+        return $this->render('General/access-denied.html.twig');
     }
 }

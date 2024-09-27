@@ -14,6 +14,7 @@ use App\Service\OpenIDConnect;
 use InvalidArgumentException;
 use LogicException;
 use Exception;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class LoginController extends MainController
 {
@@ -36,7 +37,7 @@ class LoginController extends MainController
             $this->isSooEnabled = false;
             $this->disabledSooReason = 'Identity Provider is not available';
             error_log($exception->getMessage());
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->isSooEnabled = false;
             $this->disabledSooReason = 'Unknown error';
             error_log($exception->getMessage());
@@ -46,6 +47,7 @@ class LoginController extends MainController
     }
 
     #[Route('/login', name: 'login')]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function login(): Response
     {
         return $this->render(
@@ -58,6 +60,7 @@ class LoginController extends MainController
     }
 
     #[Route('/login/validate', name: 'login_validation')]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function validate(Request $request): Response
     {
         $username = $request->request->get('username');
@@ -73,6 +76,7 @@ class LoginController extends MainController
     }
 
     #[Route('/logout', name: 'logout')]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function logout(): Response
     {
         $this->authentication->logout();
@@ -81,6 +85,7 @@ class LoginController extends MainController
     }
 
     #[Route('/login/sso', name: 'login_sso')]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function loginSso(Request $request): ?Response
     {
         try {
@@ -91,6 +96,7 @@ class LoginController extends MainController
     }
 
     #[Route('/login/sso/callback', name: 'login_sso_callback')]
+    #[IsGranted('PUBLIC_ACCESS')]
     public function loginSsoCallback(Request $request): Response
     {
         try {

@@ -1,0 +1,36 @@
+{% include 'partials/header.html.twig' %}
+<div class="container">
+    <h1>Identity Providers List</h1>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Class Name</th>
+            <th scope="col">Tenant</th>
+            <th scope="col">Client ID</th>
+            <th scope="col">Client Secret</th>
+            <th scope="col">Scope</th>
+            <th scope="col">Extra Fields</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for identityProvider in identityProviders %}
+            <tr>
+                <td>{{ identityProvider.id }}</td>
+                <td>{{ identityProvider.name }}</td>
+                <td>{{ identityProvider.description }}</td>
+                <td>{{ identityProvider.className }}</td>
+                <td>{{ identityProvider.tenant }}</td>
+                <td>{{ identityProvider.clientId }}</td>
+                <td>{{ identityProvider.clientSecret }}</td>
+                <td>{{ identityProvider.scope | join(', ') }}</td>
+                <td>{{ identityProvider.extraFields | join(', ') }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include 'partials/footer.html.twig' %}

@@ -12,26 +12,27 @@
 
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="collapse navbar-collapse">
-            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+            <ul class="navbar-nav mr-auto mt-2 mt-lg-0" style="margin-left: 10px">
                 <li class="nav-item active">
-                    <a class="nav-link" href="/users">Users</a>
+                    <a class="nav-link" href="/dashboard/user">User</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="/admin">Admin</a>
+                    <a class="nav-link" href="/dashboard/admin">Admin</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="/user">User</a>
+                    <a class="nav-link" href="/dashboard/identity-providers">List of Identity Providers</a>
                 </li>
-
-                {% if is_granted("ROLE_USER") %}
                 <li class="nav-item active">
-                    <a class="nav-link" href="/logout">Logout</a>
+                    <a class="nav-link" href="/users">List of Users</a>
                 </li>
-                {% else %}
-                <li class="nav-item active">
-                    <a class="nav-link" href="/login">Login</a>
-                </li>
-                {% endif %}
             </ul>
+
+            <div style="position: absolute; right: 15px;">
+            {% if is_granted("ROLE_USER") %}
+                <a class="nav-link" href="/logout">Logout</a>
+            {% else %}
+                <a class="nav-link" href="/login">Login</a>
+            {% endif %}
+            </div>
         </div>
     </nav>
