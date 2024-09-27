@@ -93,6 +93,8 @@ class LoginController extends MainController
         } catch (AuthenticationException|\Exception $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
+
+        return null;
     }
 
     #[Route('/login/sso/callback', name: 'login_sso_callback')]
