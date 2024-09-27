@@ -2,14 +2,13 @@
 
 namespace App\Service;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Jumbojett\OpenIDConnectClient;
 use Jumbojett\OpenIDConnectClientException;
 use App\Service\IDP\IdentityProviderInterface;
 
 class OpenIDConnect
 {
-    private array $scope = ['openid', 'profile', 'offline_access'];
-
     public function __construct(
         private readonly OpenIDConnectClient $client,
         private readonly IdentityProviderInterface $identityProvider,
@@ -17,6 +16,25 @@ class OpenIDConnect
         $this->setClientId($this->identityProvider->getClientId());
         $this->setClientSecret($this->identityProvider->getClientSecret());
         $this->setRedirectURL($this->identityProvider->getRedirectUri());
+
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function getIdentityProviderConfiguration(): array
+    {
+        return $this->identityProvider->getConfiguration();
+    }
+
+    public function getAccessTokenIssuer(): string
+    {
+        return $this->identityProvider->getAccessTokenIssuer();
+    }
+
+    public function getAccessTokenAudience(): string
+    {
+        return $this->identityProvider->getAccessTokenAudience();
     }
 
     public function setClientId(string $clientId): static
@@ -24,6 +42,11 @@ class OpenIDConnect
         $this->client->setClientId($clientId);
 
         return $this;
+    }
+
+    public function getClientId(): string
+    {
+        return $this->client->getClientId();
     }
 
     public function setClientSecret(string $clientSecret): static
@@ -42,7 +65,7 @@ class OpenIDConnect
 
     public function getScope(): array
     {
-        return $this->scope;
+        return $this->identityProvider->getScope();
     }
 
     /**

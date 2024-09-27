@@ -3,14 +3,19 @@
 
 namespace App\Service\IDP;
 
+use GuzzleHttp\ClientInterface;
 
 abstract class IdentityProviderAbstract extends IdentityProviderExtraFieldsAbstract implements IdentityProviderExtraFieldsInterface
 {
     protected string $redirectUrl;
-    protected array $scope;
+    protected array $scope = ['openid'];
     protected string $tenant;
     protected string $clientId;
     protected string $clientSecret;
+
+    public function __construct(protected ClientInterface $httpClient)
+    {
+    }
 
     public function getClientId(): string
     {

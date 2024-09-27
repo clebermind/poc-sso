@@ -6,6 +6,7 @@ use App\Repository\IdentityProviderRepository;
 use App\Repository\SettingRepository;
 use App\Service\IDP\IdentityProviderInterface;
 use App\Service\OpenIDConnect;
+use GuzzleHttp\Client;
 use Jumbojett\OpenIDConnectClient;
 use InvalidArgumentException;
 use LogicException;
@@ -16,7 +17,8 @@ final class OpenIDConnectFactory
     public function __construct(
         private readonly IdentityProviderRepository $identityProviderRepository,
         private readonly SettingRepository $settingRepository,
-        private readonly ParameterBagInterface $params
+        private readonly ParameterBagInterface $params,
+        private readonly Client $httpClient
     ) {
     }
 
@@ -44,9 +46,11 @@ final class OpenIDConnectFactory
             ->setClientId($identityProviderSetting->getClientId())
             ->setClientSecret($identityProviderSetting->getClientSecret())
             ->addExtraFields($identityProviderSetting->getExtraFields())
+            ->addScope($identityProviderSetting->getScope())
             ->setRedirectUri($defaultRedirectUri);
 
         $openIDConnectClient = new OpenIDConnectClient($identityProvider->getProviderUrl());
+        $openIDConnectClient->addScope($identityProvider->getScope());
 
         return new OpenIDConnect($openIDConnectClient, $identityProvider);
     }
@@ -68,6 +72,6 @@ final class OpenIDConnectFactory
             );
         }
 
-        return new $identityProviderClassName();
+        return new $identityProviderClassName($this->httpClient);
     }
 }

@@ -9,7 +9,7 @@ class JwtDecoder
     /**
      * @throws InvalidArgumentException
      */
-    public function decode(string $jwt): array
+    public function decode(string $jwt): object
     {
         $tokenParts = explode(".", $jwt);
 
@@ -17,22 +17,28 @@ class JwtDecoder
             throw new InvalidArgumentException('Invalid JWT token');
         }
 
-        $payloadBase64 = $tokenParts[1];
-        $payload = json_decode(base64_decode($payloadBase64), true);
+        $header = json_decode(base64_decode($tokenParts[0]), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new InvalidArgumentException('Failed to decode JWT payload');
         }
 
-        $tokenParts[1] = $payload;
+        $payload = json_decode(base64_decode($tokenParts[1]), true);
 
-        return $tokenParts;
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new InvalidArgumentException('Failed to decode JWT payload');
+        }
+
+        return (object)[
+            'header' => $header,
+            'payload' => $payload,
+        ];
     }
 
     public function getPayload(string $jwt): object
     {
         $decodedJwt = $this->decode($jwt);
 
-        return (object)$decodedJwt[1];
+        return (object)$decodedJwt->payload;
     }
 }

@@ -20,12 +20,13 @@ class Authentication
         private readonly UserRepository $userRepository,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly JwtDecoder $jwtDecoder,
+        private readonly TokenValidator $tokenValidator,
         RequestStack $requestStack)
     {
         $this->session = $requestStack->getSession();
     }
 
-    public function authenticateWithCredentials(string $username, string $password): void
+    public function authenticateCredentials(string $username, string $password): void
     {
         $user = $this->userRepository->findOneBy(['username' => $username]);
 
@@ -36,11 +37,20 @@ class Authentication
         $this->authorizeByCredentials($user);
     }
 
-    public function authenticateSsoTokens(string $accessToken, string $idToken, ?string $refreshToken = null): void
+    /**
+     * @throws AuthenticationException
+     */
+    public function authenticateSso(OpenIDConnect $openIDConnect): void
     {
-        $accessTokenPayload = $this->jwtDecoder->getPayload($accessToken);
+        $idToken = $openIDConnect->getIdToken();
+        $this->tokenValidator->validateIdToken($idToken);
 
-        $emailAddress = $accessTokenPayload->email ?? null;
+        $accessToken = $openIDConnect->getAccessToken();
+        $this->tokenValidator->validateAccessToken($accessToken);
+
+        $refreshToken = $openIDConnect->getRefreshToken();
+
+        $emailAddress =  $this->jwtDecoder->getPayload($accessToken)->email ?? null;
         if (is_null($emailAddress)) {
             throw new AuthenticationException('Email address not identified.');
         }

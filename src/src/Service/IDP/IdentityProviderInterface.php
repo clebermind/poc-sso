@@ -2,6 +2,8 @@
 
 namespace App\Service\IDP;
 
+use GuzzleHttp\Exception\GuzzleException;
+
 interface IdentityProviderInterface
 {
     public function getClientId(): string;
@@ -16,4 +18,8 @@ interface IdentityProviderInterface
     public function addScope(string|array $scope): static;
     public function removeScope(string $scope): static;
     public function getProviderUrl(): string;
+    /**
+     * @throws GuzzleException
+     */
+    public function getConfiguration(): array;
 }

@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use Jumbojett\OpenIDConnectClientException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -67,7 +66,7 @@ class LoginController extends MainController
         $password = $request->request->get('password');
 
         try {
-            $this->authentication->authenticateWithCredentials($username, $password);
+            $this->authentication->authenticateCredentials($username, $password);
         } catch (AuthenticationException $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
@@ -107,18 +106,8 @@ class LoginController extends MainController
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
 
-        $accessToken = $this->openIDConnect->getAccessToken();
-        $idToken = $this->openIDConnect->getIdToken();
-        $refreshToken = $this->openIDConnect->getRefreshToken();
-
         try {
-            $this->openIDConnect->verifyJWTSignature($accessToken);
-        } catch (OpenIDConnectClientException|\Exception $e) {
-            return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
-        }
-
-        try {
-            $this->authentication->authenticateSsoTokens($accessToken, $idToken, $refreshToken);
+            $this->authentication->authenticateSso($this->openIDConnect);
         } catch (AuthenticationException $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
