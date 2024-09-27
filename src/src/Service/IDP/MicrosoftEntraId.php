@@ -10,15 +10,6 @@ final class MicrosoftEntraId extends IdentityProviderAbstract implements Identit
     private string $providerUrl = 'https://login.microsoftonline.com/{tenant}';
     private string $version = 'v2.0';
 
-    private function getBaseUrl(): string
-    {
-        if ($this->tenant) {
-            return str_replace('{tenant}', $this->tenant, $this->providerUrl);
-        }
-
-        throw new LogicException('Microsoft Entra ID Provider "tenant" is not configured.');
-    }
-
     /**
      * @throws LogicException
      */
@@ -46,5 +37,17 @@ final class MicrosoftEntraId extends IdentityProviderAbstract implements Identit
     public function getAccessTokenAudience(): string
     {
         return '00000003-0000-0000-c000-000000000000';
+    }
+
+    /**
+     * @throws LogicException
+     */
+    private function getBaseUrl(): string
+    {
+        if ($this->tenant) {
+            return str_replace('{tenant}', $this->tenant, $this->providerUrl);
+        }
+
+        throw new LogicException('Microsoft Entra ID Provider "tenant" is not configured.');
     }
 }

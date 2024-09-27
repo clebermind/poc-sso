@@ -17,9 +17,21 @@ interface IdentityProviderInterface
     public function getScope(): array;
     public function addScope(string|array $scope): static;
     public function removeScope(string $scope): static;
+    public function getAccessTokenAudience(): string;
+    public function getAccessTokenIssuer(): string;
+
+    /**
+     * @throws LogicException
+     */
     public function getProviderUrl(): string;
+
     /**
      * @throws GuzzleException
      */
     public function getConfiguration(): array;
+
+    public function addExtraField(string $name, mixed $value): static;
+    public function addExtraFields(array $extraFields): static;
+    public function getExtraFields(): array;
+    public function deleteExtraField(string $fieldName): static;
 }

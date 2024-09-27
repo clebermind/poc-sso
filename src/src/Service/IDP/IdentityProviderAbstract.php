@@ -5,13 +5,14 @@ namespace App\Service\IDP;
 
 use GuzzleHttp\ClientInterface;
 
-abstract class IdentityProviderAbstract extends IdentityProviderExtraFieldsAbstract implements IdentityProviderExtraFieldsInterface
+abstract class IdentityProviderAbstract implements IdentityProviderInterface
 {
     protected string $redirectUrl;
     protected array $scope = ['openid'];
     protected string $tenant;
     protected string $clientId;
     protected string $clientSecret;
+    protected array $extraFields = [];
 
     public function __construct(protected ClientInterface $httpClient)
     {
@@ -86,5 +87,31 @@ abstract class IdentityProviderAbstract extends IdentityProviderExtraFieldsAbstr
         unset($this->scope[$scope]);
 
         return $this;
+    }
+
+    public function addExtraField(string $name, mixed $value): static
+    {
+        $this->extraFields[$name] = $value;
+
+        return $this;
+    }
+
+    public function addExtraFields(array $extraFields): static
+    {
+        $this->extraFields = array_merge($this->extraFields, $extraFields);
+
+        return $this;
+    }
+
+    public function deleteExtraField(string $fieldName): static
+    {
+        unset($this->extraFields[$fieldName]);
+
+        return $this;
+    }
+
+    public function getExtraFields(): array
+    {
+        return $this->extraFields;
     }
 }
