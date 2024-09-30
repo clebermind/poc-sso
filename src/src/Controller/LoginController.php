@@ -102,7 +102,7 @@ class LoginController extends MainController
     #[IsGranted('PUBLIC_ACCESS')]
     public function loginSsoCallback(Request $request): Response
     {
-       if (empty($request->request->all())) {
+       if (empty($request->query->get('code'))) {
            return $this->redirectToRoute('login');
        }
 
