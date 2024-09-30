@@ -4,7 +4,7 @@ namespace App\Service\IDP;
 
 use LogicException;
 
-final class Auth0 extends IdentityProviderAbstract implements IdentityProviderInterface
+final class Auth0 extends IdentityProviderAbstract
 {
     /**
      * @throws LogicException

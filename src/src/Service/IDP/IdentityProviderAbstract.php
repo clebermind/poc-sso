@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 abstract class IdentityProviderAbstract implements IdentityProviderInterface
 {
     protected string $redirectUrl;
-    protected array $scope = ['openid'];
+    protected array $scope = ['openid', 'email'];
     protected string $clientId;
     protected string $clientSecret;
     protected array $extraFields = [];
@@ -109,17 +109,6 @@ abstract class IdentityProviderAbstract implements IdentityProviderInterface
     public function getConfiguration(): array
     {
         $url = "{$this->getProviderUrl()}/.well-known/openid-configuration";
-        $response = $this->httpClient->request('GET', $url);
-
-        return json_decode($response->getBody()->getContents(), true);
-    }
-
-    /**
-     * @throws GuzzleException
-     */
-    public function getJwks(): array
-    {
-        $url = "{$this->getProviderUrl()}/.well-known/jwks.json";
         $response = $this->httpClient->request('GET', $url);
 
         return json_decode($response->getBody()->getContents(), true);

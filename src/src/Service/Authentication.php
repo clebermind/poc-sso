@@ -20,7 +20,6 @@ class Authentication
     public function __construct(
         private readonly UserRepository $userRepository,
         private readonly TokenStorageInterface $tokenStorage,
-        private readonly JwtDecoder $jwtDecoder,
         private readonly TokenValidator $tokenValidator,
         RequestStack $requestStack)
     {
@@ -44,41 +43,27 @@ class Authentication
      * @throws AuthenticationException
      * @throws OpenIDConnectClientException
      */
-    public function authenticateSso(OpenIDConnect $openIDConnect): void
+    public function authenticateSso(OpenIDConnect $openIdConnect): void
     {
-        $idToken = $openIDConnect->getIdToken();
-        $this->tokenValidator->validateIdToken($idToken);
+        $idToken = $openIdConnect->getIdToken();
+        $this->tokenValidator->validate($idToken);
 
-        $accessToken = $openIDConnect->getAccessToken();
-        $this->tokenValidator->validateAccessToken($accessToken);
-
-        $refreshToken = $openIDConnect->getRefreshToken();
-
-        $decodedAccessToken =  $this->jwtDecoder->decode($accessToken);
-
-        if ($this->jwtDecoder->isJws()) {
-            if (empty($decodedAccessToken->payload['email'])) {
-                throw new AuthenticationException('Email address not identified.');
-            }
-
-            $userEmail = $decodedAccessToken->payload['email'];
-        } else {
-            $userInfo = $openIDConnect->requestUserInfo();
-            if (empty($userInfo->email)) {
-                throw new AuthenticationException('Email address not identified.');
-            }
-
-            $userEmail = $userInfo->email;
+        $userInfo = $openIdConnect->requestUserInfo();
+        if (empty($userInfo->email)) {
+            throw new AuthenticationException('Email address not identified.');
         }
 
-        $user = $this->userRepository->findOneBy(['username' => $userEmail]);
+        $user = $this->userRepository->findOneBy(['username' => $userInfo->email]);
         if (!$user) {
             throw new AuthenticationException('User not registered.');
         }
 
+        $accessToken = $openIdConnect->getAccessToken();
+        $refreshToken = $openIdConnect->getRefreshToken();
+
         $this->authorizeBySso($user, $accessToken, $idToken, $refreshToken);
 
-        $this->session->set('login_method', $openIDConnect->getIdentityProviderName());
+        $this->session->set('login_method', $openIdConnect->getIdentityProviderName());
     }
 
     protected function authorizeByCredentials(UserInterface $user): void

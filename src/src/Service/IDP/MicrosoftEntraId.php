@@ -4,9 +4,7 @@ namespace App\Service\IDP;
 
 use LogicException;
 
-final class MicrosoftEntraId
-    extends IdentityProviderAbstract
-    implements IdentityProviderInterface, IdentityProviderAccessTokenInterface
+final class MicrosoftEntraId extends IdentityProviderAbstract
 {
     private string $providerUrl = 'https://login.microsoftonline.com/{tenant}';
     private string $version = 'v2.0';
@@ -17,16 +15,6 @@ final class MicrosoftEntraId
     public function getProviderUrl(): string
     {
         return  "{$this->getBaseUrl()}/{$this->version}";
-    }
-
-    public function getAccessTokenIssuer(): string
-    {
-        return sprintf('https://sts.windows.net/%s/', $this->getTenant());
-    }
-
-    public function getAccessTokenAudience(): string
-    {
-        return '00000003-0000-0000-c000-000000000000';
     }
 
     /**

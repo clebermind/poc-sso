@@ -9,85 +9,72 @@ use Exception;
 
 class TokenValidator
 {
-    private OpenIDConnect $openIDConnect;
+    private OpenIDConnect $openIdConnect;
     private object $decodedToken;
-    private array $configuration;
-    private array $publicKeys;
+    private array $identityProviderConfiguration;
 
     public function __construct(
         private readonly JwtDecoder $jwtDecoder,
-        OpenIDConnectFactory $openIDConnectFactory)
+        OpenIDConnectFactory $openIdConnectFactory)
     {
-        $this->openIDConnect = $openIDConnectFactory->create();
+        $this->openIdConnect = $openIdConnectFactory->create();
     }
 
     /**
      * @throws AuthenticationException
      */
-    public function validateIdToken(string $idToken): void
+    public function validate(string $token): void
     {
-        $this->validate($idToken);
+        $this->decodeToken($token);
+        $this->loadIdentityProviderConfiguration();
 
-        if (!$this->isValidIssuer($this->configuration['issuer'])) {
+        if ($this->isExpired()) {
+            throw new AuthenticationException('Token has expired.');
+        }
+
+        if (!$this->isValidIssuer()) {
             throw new AuthenticationException('Invalid issuer.');
         }
 
-        if (!$this->isValidAudience($this->openIDConnect->getClientId())) {
+        if (!$this->isValidAudience()) {
             throw new AuthenticationException('Invalid audience.');
         }
     }
 
-    /**
-     * @throws AuthenticationException
-     */
-    public function validateAccessToken(string $accessToken): void
-    {
-        $this->validate($accessToken);
-
-        if ($this->jwtDecoder->isJws()) {
-            if (!$this->isValidIssuer($this->openIDConnect->getAccessTokenIssuer())) {
-                throw new AuthenticationException('Invalid issuer.');
-            }
-
-            if (!$this->isValidAudience($this->openIDConnect->getAccessTokenAudience())) {
-                throw new AuthenticationException('Invalid audience.');
-            }
-        }
-    }
-
-    /**
-     * @throws AuthenticationException
-     */
-    private function validate(string $token): void
+    private function decodeToken(string $token): void
     {
         $this->decodedToken = $this->jwtDecoder->decode($token);
+    }
 
-        if ($this->jwtDecoder->isJws()) {
-            if ($this->isExpired()) {
-                throw new AuthenticationException('Token has expired.');
-            }
-
-            try {
-                $this->configuration = $this->openIDConnect->getIdentityProviderConfiguration();
-            } catch (GuzzleException|Exception $exception) {
-                error_log($exception->getMessage());
-                throw new AuthenticationException('Not possible to get the identity provider configuration');
-            }
+    /**
+     * @throws AuthenticationException
+     */
+    private function loadIdentityProviderConfiguration(): void
+    {
+        try {
+            $this->identityProviderConfiguration = $this->openIdConnect->getIdentityProviderConfiguration();
+        } catch (GuzzleException|Exception $exception) {
+            error_log($exception->getMessage());
+            throw new AuthenticationException('Not possible to get the identity provider configuration');
         }
     }
 
-    private function isValidIssuer(string $expectedIssuer): bool
+    private function isValidIssuer(): bool
     {
-        return $this->decodedToken->payload['iss'] === $expectedIssuer;
+        if (isset($this->identityProviderConfiguration['issuer'], $this->decodedToken->payload['iss'])) {
+            return $this->decodedToken->payload['iss'] === $this->identityProviderConfiguration['issuer'];
+        }
+
+        return false;
     }
 
-    private function isValidAudience(string $expectedAudience): bool
+    private function isValidAudience(): bool
     {
-        if (isset($this->decodedToken->payload['aud'])) {
+        if (isset($this->decodedToken->payload['aud'], $this->decodedToken->payload['aud'])) {
             if (is_array( $this->decodedToken->payload['aud'])) {
-                return in_array($expectedAudience, $this->decodedToken->payload['aud']);
+                return in_array($this->openIdConnect->getClientId(), $this->decodedToken->payload['aud']);
             } else {
-                return $this->decodedToken->payload['aud'] === $expectedAudience;
+                return $this->decodedToken->payload['aud'] === $this->openIdConnect->getClientId();
             }
         }
 
@@ -96,8 +83,7 @@ class TokenValidator
 
     private function isExpired(): bool
     {
-        $currentTime = time();
-        if (isset($decodedToken->exp) && $decodedToken->exp < $currentTime) {
+        if (isset($decodedToken->exp) && $decodedToken->exp < time()) {
             return true;
         }
 

@@ -7,6 +7,7 @@ use InvalidArgumentException;
 class JwtDecoder
 {
     private bool $isJwe = false;
+
     /**
      * @throws InvalidArgumentException
      */
@@ -60,26 +61,6 @@ class JwtDecoder
         }
 
         return $decodedValue;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function getJwsPayload(string $jwt): object
-    {
-        $decodedJwt = $this->decode($jwt);
-
-        return (object)$decodedJwt->payload;
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function getJweCiphertext(string $jwt): object
-    {
-        $decodedJwe = $this->decode($jwt);
-
-        return (object)$decodedJwe->ciphertext;
     }
 
     public function isJwe(): bool

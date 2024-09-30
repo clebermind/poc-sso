@@ -40,24 +40,6 @@ class OpenIDConnect
         return $this->identityProvider->getConfiguration();
     }
 
-    /**
-     * @throws GuzzleException
-     */
-    public function getIdentityProviderJwks(): array
-    {
-        return $this->identityProvider->getJwks();
-    }
-
-    public function getAccessTokenIssuer(): string
-    {
-        return $this->identityProvider->getAccessTokenIssuer();
-    }
-
-    public function getAccessTokenAudience(): string
-    {
-        return $this->identityProvider->getAccessTokenAudience();
-    }
-
     public function setClientId(string $clientId): static
     {
         $this->client->setClientId($clientId);
@@ -84,11 +66,6 @@ class OpenIDConnect
         return $this;
     }
 
-    public function getScope(): array
-    {
-        return $this->identityProvider->getScope();
-    }
-
     /**
      * @throws OpenIDConnectClientException
      */
@@ -112,24 +89,11 @@ class OpenIDConnect
         return $this->client->getRefreshToken();
     }
 
-    public function getVerifiedClaims(): mixed
-    {
-        return $this->client->getVerifiedClaims();
-    }
-
     /**
      * @throws OpenIDConnectClientException
      */
     public function requestUserInfo(string $attribute = null): mixed
     {
         return $this->client->requestUserInfo($attribute);
-    }
-
-    /**
-     * @throws OpenIDConnectClientException
-     */
-    public function verifyJWTSignature(string $jwt): bool
-    {
-        return $this->client->verifyJWTSignature($jwt);
     }
 }
