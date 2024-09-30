@@ -102,9 +102,13 @@ class LoginController extends MainController
     #[IsGranted('PUBLIC_ACCESS')]
     public function loginSsoCallback(Request $request): Response
     {
+       if (empty($request->request->all())) {
+           return $this->redirectToRoute('login');
+       }
+
         try {
             $this->openIDConnect->authenticate();
-        } catch (AuthenticationException|\Exception $e) {
+        } catch (AuthenticationException|Exception $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
 
