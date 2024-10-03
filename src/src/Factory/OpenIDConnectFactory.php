@@ -11,6 +11,7 @@ use Jumbojett\OpenIDConnectClient;
 use InvalidArgumentException;
 use LogicException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 final class OpenIDConnectFactory
 {
@@ -18,7 +19,8 @@ final class OpenIDConnectFactory
         private readonly IdentityProviderRepository $identityProviderRepository,
         private readonly SettingRepository $settingRepository,
         private readonly ParameterBagInterface $params,
-        private readonly Client $httpClient
+        private readonly Client $httpClient,
+        private readonly RequestStack $requestStack,
     ) {
     }
 
@@ -51,7 +53,7 @@ final class OpenIDConnectFactory
         $openIDConnectClient = new OpenIDConnectClient($identityProvider->getProviderUrl());
         $openIDConnectClient->addScope($identityProvider->getScope());
 
-        $openIdConnect = new OpenIDConnect($openIDConnectClient, $identityProvider);
+        $openIdConnect = new OpenIDConnect($openIDConnectClient, $identityProvider,  $this->requestStack->getSession());
         $openIdConnect->setIdentityProviderName($identityProviderSetting->getName());
 
         return $openIdConnect;

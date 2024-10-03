@@ -6,18 +6,23 @@ use GuzzleHttp\Exception\GuzzleException;
 use Jumbojett\OpenIDConnectClient;
 use Jumbojett\OpenIDConnectClientException;
 use App\Service\IDP\IdentityProviderInterface;
+use Random\RandomException;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class OpenIDConnect
 {
+    private readonly string $codeVerifierStr;
     private ?string $identityProviderName = null;
 
     public function __construct(
         private readonly OpenIDConnectClient $client,
         private readonly IdentityProviderInterface $identityProvider,
+        private readonly SessionInterface $session,
     ) {
         $this->setClientId($this->identityProvider->getClientId());
         $this->setClientSecret($this->identityProvider->getClientSecret());
         $this->setRedirectURL($this->identityProvider->getRedirectUri());
+        $this->codeVerifierStr = '__sso_code_verifier';
     }
 
     public function setIdentityProviderName(string $identityProviderName): static
@@ -95,5 +100,39 @@ class OpenIDConnect
     public function requestUserInfo(string $attribute = null): mixed
     {
         return $this->client->requestUserInfo($attribute);
+    }
+
+    public function useCodeChallenge(): bool
+    {
+        try {
+            $codeChallenge = $this->generateCodeChallenge();
+        } catch (RandomException $exception) {
+            error_log($exception->getMessage());
+            return false;
+        }
+
+        $this->client->setCodeChallengeMethod($codeChallenge);
+
+        return true;
+    }
+
+    public function eraseCodeChallenge(): void
+    {
+        $this->session->remove($this->codeVerifierStr);
+    }
+
+    /**
+     * @throws RandomException
+     */
+    private function generateCodeChallenge(): string
+    {
+        if ($this->session->has($this->codeVerifierStr)) {
+            $codeVerifier = $this->session->get($this->codeVerifierStr);
+        } else {
+            $codeVerifier = bin2hex(random_bytes(32));
+            $this->session->set($this->codeVerifierStr, $codeVerifier);
+        }
+
+        return strtr(rtrim(base64_encode(hash('sha256', $codeVerifier, true)), '='), '+/', '-_');
     }
 }

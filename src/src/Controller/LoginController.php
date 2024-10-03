@@ -90,6 +90,7 @@ class LoginController extends MainController
     public function loginSso(Request $request): ?Response
     {
         try {
+            $this->openIDConnect->useCodeChallenge();
             $this->openIDConnect->authenticate();
         } catch (AuthenticationException|\Exception $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
@@ -107,10 +108,13 @@ class LoginController extends MainController
        }
 
         try {
+            $this->openIDConnect->useCodeChallenge();
             $this->openIDConnect->authenticate();
         } catch (AuthenticationException|Exception $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
+
+       $this->openIDConnect->eraseCodeChallenge();
 
         try {
             $this->authManager->authenticateSso($this->openIDConnect);

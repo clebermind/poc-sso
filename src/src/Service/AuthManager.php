@@ -21,8 +21,8 @@ class AuthManager
         private readonly UserRepository $userRepository,
         private readonly TokenStorageInterface $tokenStorage,
         private readonly TokenValidator $tokenValidator,
-        RequestStack $requestStack)
-    {
+        RequestStack $requestStack,
+    ) {
         $this->session = $requestStack->getSession();
     }
 
