@@ -15,8 +15,8 @@ class TokenValidator
 
     public function __construct(
         private readonly JwtDecoder $jwtDecoder,
-        OpenIDConnectFactory $openIdConnectFactory)
-    {
+        OpenIDConnectFactory $openIdConnectFactory
+    ) {
         $this->openIdConnect = $openIdConnectFactory->create();
     }
 
@@ -70,8 +70,8 @@ class TokenValidator
 
     private function isValidAudience(): bool
     {
-        if (isset($this->decodedToken->payload['aud'], $this->decodedToken->payload['aud'])) {
-            if (is_array( $this->decodedToken->payload['aud'])) {
+        if (isset($this->decodedToken->payload['aud'])) {
+            if (is_array($this->decodedToken->payload['aud'])) {
                 return in_array($this->openIdConnect->getClientId(), $this->decodedToken->payload['aud']);
             } else {
                 return $this->decodedToken->payload['aud'] === $this->openIdConnect->getClientId();

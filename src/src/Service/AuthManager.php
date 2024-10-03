@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class Authentication
+class AuthManager
 {
     private SessionInterface $session;
 

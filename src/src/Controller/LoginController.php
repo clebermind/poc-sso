@@ -8,7 +8,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
-use App\Service\Authentication;
+use App\Service\AuthManager;
 use App\Factory\OpenIDConnectFactory;
 use App\Service\OpenIDConnect;
 use InvalidArgumentException;
@@ -23,7 +23,7 @@ class LoginController extends MainController
     private ?string $disabledSooReason = null;
 
     public function __construct(
-        private readonly Authentication $authentication,
+        private readonly AuthManager $authManager,
         OpenIDConnectFactory $openIDConnectFactory,
         TokenStorageInterface $tokenStorage,
     ) {
@@ -68,7 +68,7 @@ class LoginController extends MainController
         $password = $request->request->get('password');
 
         try {
-            $this->authentication->authenticateCredentials($username, $password);
+            $this->authManager->authenticateCredentials($username, $password);
         } catch (AuthenticationException $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
@@ -80,7 +80,7 @@ class LoginController extends MainController
     #[IsGranted('PUBLIC_ACCESS')]
     public function logout(): Response
     {
-        $this->authentication->logout();
+        $this->authManager->logout();
 
         return $this->redirectToRoute('login', ['message' => 'Logged out successfully']);
     }
@@ -113,7 +113,7 @@ class LoginController extends MainController
         }
 
         try {
-            $this->authentication->authenticateSso($this->openIDConnect);
+            $this->authManager->authenticateSso($this->openIDConnect);
         } catch (AuthenticationException|OpenIDConnectClientException $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
