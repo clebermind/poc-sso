@@ -19,14 +19,14 @@ class SingleSignOnSettings
     ) {
     }
 
-    public function clearSsoSettingCache(): int
+    public function clearSsoSettingCache(): bool
     {
-        return $this->cacheClient->delete(self::SSO_SETTING_KEY_NAME);
+        return $this->cacheClient->delete(self::SSO_SETTING_KEY_NAME) > 0;
     }
 
-    public function clearIdentityProviderSettingsCache(): int
+    public function clearIdentityProviderSettingsCache(): bool
     {
-        return $this->cacheClient->delete(self::IDENTITY_PROVIDER_SETTINGS_KEY_NAME);
+        return $this->cacheClient->delete(self::IDENTITY_PROVIDER_SETTINGS_KEY_NAME) > 0;
     }
 
     /**
