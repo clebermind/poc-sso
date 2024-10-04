@@ -2,10 +2,9 @@
 
 namespace App\Factory;
 
-use App\Repository\IdentityProviderRepository;
-use App\Repository\SettingRepository;
 use App\Service\IDP\IdentityProviderInterface;
 use App\Service\OpenIDConnect;
+use App\Service\SingleSignOnSettings;
 use GuzzleHttp\Client;
 use Jumbojett\OpenIDConnectClient;
 use InvalidArgumentException;
@@ -16,11 +15,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
 final class OpenIDConnectFactory
 {
     public function __construct(
-        private readonly IdentityProviderRepository $identityProviderRepository,
-        private readonly SettingRepository $settingRepository,
         private readonly ParameterBagInterface $params,
         private readonly Client $httpClient,
         private readonly RequestStack $requestStack,
+        private readonly SingleSignOnSettings $singleSignOnSettings,
     ) {
     }
 
@@ -30,19 +28,12 @@ final class OpenIDConnectFactory
      */
     public function create(): OpenIDConnect
     {
-        $ssoSetting = $this->settingRepository->findOneByName('sso');
-        if (is_null($ssoSetting)) {
-            throw new LogicException('SSO settings not found');
-        }
+        $identityProviderSetting = $this->singleSignOnSettings->getIdentityProviderSetting();
 
-        $identityProviderSetting = $this->identityProviderRepository->findOneByClassName($ssoSetting->getValue());
-        if (is_null($identityProviderSetting)) {
-            throw new LogicException('Identity Provider settings not found');
-        }
+        $ssoSettingValue = $this->singleSignOnSettings->getSsoSetting();
+        $identityProvider = $this->getIdentityProviderObject($ssoSettingValue);
 
         $defaultRedirectUri = $identityProviderSetting->getRedirectUrl() ?? $this->params->get('default_redirect_uri');
-
-        $identityProvider = $this->getIdentityProviderObject($ssoSetting->getValue());
 
         $identityProvider->setClientId($identityProviderSetting->getClientId())
             ->setClientSecret($identityProviderSetting->getClientSecret())

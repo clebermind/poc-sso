@@ -11,11 +11,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Exception;
+use App\Service\SingleSignOnSettings;
 
 class DashboardController extends MainController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly SingleSignOnSettings $singleSignOnSettings,
         TokenStorageInterface $tokenStorage
     ) {
         parent::__construct($tokenStorage);
@@ -86,6 +88,9 @@ class DashboardController extends MainController
                 ['message' => 'Error while saving: ' . $e->getMessage()]
             );
         }
+
+        $this->singleSignOnSettings->clearSsoSettingCache();
+        $this->singleSignOnSettings->clearIdentityProviderSettingsCache();
 
         return $this->redirectToRoute('available_identity_providers', ['message' => 'Updated!']);
     }
