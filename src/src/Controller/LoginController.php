@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Service\AuthManager;
 use App\Factory\OpenIDConnectFactory;
 use App\Service\OpenIDConnect;
+use App\Service\TokenManager;
 use InvalidArgumentException;
 use LogicException;
 use Exception;
@@ -24,6 +25,7 @@ class LoginController extends MainController
 
     public function __construct(
         private readonly AuthManager $authManager,
+        private readonly TokenManager $tokenManager,
         OpenIDConnectFactory $openIDConnectFactory,
         TokenStorageInterface $tokenStorage,
     ) {
@@ -121,6 +123,10 @@ class LoginController extends MainController
         } catch (AuthenticationException|OpenIDConnectClientException $e) {
             return $this->redirectToRoute('login', ['message' => $e->getMessage()]);
         }
+
+        $accessToken = $this->openIDConnect->getAccessToken();
+        $refreshToken = $this->openIDConnect->getRefreshToken();
+        $this->tokenManager->storeTokens($accessToken, $refreshToken);
 
         return $this->redirectToRoute('user_list');
     }

@@ -15,6 +15,9 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class AuthManager
 {
+    public const _SECURITY_MAIN = '_security_main';
+    public const _LOGIN_METHOD = '_login_method';
+
     private SessionInterface $session;
 
     public function __construct(
@@ -58,48 +61,33 @@ class AuthManager
             throw new AuthenticationException('User not registered.');
         }
 
-        $accessToken = $openIdConnect->getAccessToken();
-        $refreshToken = $openIdConnect->getRefreshToken();
+        $this->authorizeBySso($user);
 
-        $this->authorizeBySso($user, $accessToken, $idToken, $refreshToken);
-
-        $this->session->set('login_method', $openIdConnect->getIdentityProviderName());
+        $this->session->set(self::_LOGIN_METHOD, $openIdConnect->getIdentityProviderName());
     }
 
     protected function authorizeByCredentials(UserInterface $user): void
     {
         $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
-
         $this->authorize($token);
     }
 
-    protected function authorizeBySso(
-        UserInterface $user,
-        string $accessToken,
-        string $idToken,
-        ?string $refreshToken = null,
-    ): void {
+    protected function authorizeBySso(UserInterface $user): void
+    {
         $token = new PreAuthenticatedToken($user, 'main', $user->getRoles());
-        $token->setAttributes([
-            'accessToken' => $accessToken,
-            'idToken' => $idToken,
-            'refreshToken' => $refreshToken,
-        ]);
-
         $this->authorize($token);
     }
 
     private function authorize(TokenInterface $token): void
     {
         $this->tokenStorage->setToken($token);
-        $this->session->set('_security_main', serialize($token));
+        $this->session->set(self::_SECURITY_MAIN, serialize($token));
     }
-
 
     public function logout(): void
     {
         $this->tokenStorage->setToken(null);
-        $this->session->remove('_security_main');
-        $this->session->remove('login_method');
+        $this->session->remove(self::_SECURITY_MAIN);
+        $this->session->remove(self::_LOGIN_METHOD);
     }
 }
