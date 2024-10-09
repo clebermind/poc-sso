@@ -90,4 +90,9 @@ class AuthManager
         $this->session->remove(self::_SECURITY_MAIN);
         $this->session->remove(self::_LOGIN_METHOD);
     }
+
+    public function isSsoLoggedIn(): bool
+    {
+        return $this->tokenStorage->getToken() instanceof PreAuthenticatedToken;
+    }
 }

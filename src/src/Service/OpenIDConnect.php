@@ -6,7 +6,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Jumbojett\OpenIDConnectClient;
 use Jumbojett\OpenIDConnectClientException;
 use App\Service\IDP\IdentityProviderInterface;
-use Random\RandomException;
+use Exception;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class OpenIDConnect
@@ -50,6 +50,18 @@ class OpenIDConnect
         $this->client->setClientId($clientId);
 
         return $this;
+    }
+
+    public function refreshToken(string $refreshToken): bool
+    {
+        try {
+            $this->client->refreshToken($refreshToken);
+        } catch (OpenIDConnectClientException|Exception $exception) {
+            error_log($exception->getMessage());
+            return false;
+        }
+
+        return true;
     }
 
     public function getClientId(): string

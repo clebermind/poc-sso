@@ -9,21 +9,39 @@ use Symfony\Component\Security\Core\Exception\TokenNotFoundException;
 
 class TokenManager
 {
-    private SessionInterface $session;
+    private ?SessionInterface $session = null;
 
     public function __construct(
         private readonly CacheClient $cacheClient,
         private readonly Encryptor $encryptor,
         private RequestStack $requestStack
     ) {
-        $this->session = $requestStack->getSession();
+        if ($this->requestStack->getCurrentRequest()->hasSession()) {
+            $this->session = $requestStack->getSession();
+        }
     }
 
-    public function storeTokens(string $accessToken, ?string $refreshToken = null): void
+    public function setSession(SessionInterface $session): static
     {
+        $this->session = $session;
+
+        return $this;
+    }
+
+    public function storeTokens(string $accessToken, ?string $refreshToken = null): bool
+    {
+        if (is_null($this->session)) {
+            return false;
+        }
+
         $identifier = $this->getIdentifier();
         $this->cacheClient->set("{$identifier}_at", $this->encryptor->encrypt($accessToken));
-        $this->cacheClient->set("{$identifier}_rt", $this->encryptor->encrypt($refreshToken));
+
+        if (!empty($refreshToken)) {
+            $this->cacheClient->set("{$identifier}_rt", $this->encryptor->encrypt($refreshToken));
+        }
+
+        return true;
     }
 
     /**
@@ -31,6 +49,10 @@ class TokenManager
      */
     public function getAccessToken(): ?string
     {
+        if (is_null($this->session)) {
+            return null;
+        }
+
         $identifier = $this->getIdentifier();
         return $this->encryptor->decrypt($this->cacheClient->get("{$identifier}_at"));
     }
@@ -40,6 +62,10 @@ class TokenManager
      */
     public function getRefreshTokenToken(): ?string
     {
+        if (is_null($this->session)) {
+            return null;
+        }
+
         $identifier = $this->getIdentifier();
         return $this->encryptor->decrypt($this->cacheClient->get("{$identifier}_rt"));
     }
